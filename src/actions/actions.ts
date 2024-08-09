@@ -1,9 +1,12 @@
 "use server"
 import * as z from "zod";
-import { registerInSchema } from "@/lib/zod"
+import { registerInSchema, signInSchema } from "@/lib/zod"
 import bcrypt from "bcryptjs"
 import prisma from "@/lib/connect"
 import { revalidatePath } from "next/cache";
+import { signIn } from "@/app/(auth)/auth";
+import { LoginForm } from "@/components";
+import { AuthError } from "next-auth";
 
 
 export const register = async (formdata: FormData) => {
@@ -17,7 +20,7 @@ export const register = async (formdata: FormData) => {
     let existingUser = null
     if(!validatedFields.success){
         console.log("12")
-        return {error : "Invalid Fields!"}
+        return {error : "Invalid Fields!😞"}
     }
 
     const {email, password, username} = validatedFields.data
@@ -30,7 +33,7 @@ export const register = async (formdata: FormData) => {
     })
 
     if(existingUser){
-        return {error: "Email already in use!"}
+        return {error: "Email already in use!😞"}
     }
 
     await prisma.user.create({
@@ -40,7 +43,39 @@ export const register = async (formdata: FormData) => {
             hashPwd: pwHash
         }
     })
-    revalidatePath("/")
+    revalidatePath("/register")
 
-    return {success: "User Registered"}
+    return {success: "User Registered Successfully!!🥳"}
+}
+
+export const login = async (formdata: FormData) => {
+    const values = {
+        email: `${formdata.get("email") as string}`,
+        password: `${formdata.get("password") as string}`
+    }
+    const validatedFields = signInSchema.safeParse(values)
+    if(!validatedFields.success){
+        return {error: "Invalid fields!"}
+    }
+    const { email , password } = validatedFields.data
+    console.log(email, password)
+    try {
+        const response = await signIn("credentials",{
+            email: email,
+            password: password,
+            redirect: false,
+        })
+        console.log(response)
+        return {success: "User Login Successfull!!"}
+    } catch (error) {
+        if(error instanceof AuthError){
+            switch (error.type){
+                case "CredentialsSignin":
+                    return {error: "Invalid credentials!"}
+                default: 
+                    return {error: "Something went wrong!"}
+            }
+        }
+        throw error
+    }
 }

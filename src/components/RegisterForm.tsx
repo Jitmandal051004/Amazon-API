@@ -4,15 +4,42 @@ import { Button, Field, Fieldset, Input, Label, Legend } from '@headlessui/react
 import clsx from 'clsx'
 import Buttons from './Buttons'
 import { register } from '@/actions/actions'
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import Link from 'next/link'
+import StatusMsg from './StatusMsg'
+
+interface RegisterErrorResponse {
+    error: string;
+    success?: undefined;
+}
+
+interface RegisterSuccessResponse {
+    success: string;
+    error?: undefined;
+}
+
+type RegisterResponse = RegisterErrorResponse | RegisterSuccessResponse;
 
 export default function RegisterForm() {
     const refer = useRef<HTMLFormElement>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
+    const handleClick = () => {
+        alert("Amazon API credential doesn't exist")
+    }
     return (
         <div className="w-full max-w-lg px-4">
-            <form action={async formData => {
+            <form ref={refer} action={async formData => {
                 refer.current?.reset() 
-                await register(formData)
+                const {error, success}: RegisterResponse = await register(formData)
+                if(error){
+                    setError(error ?? null)
+                    setSuccess(null)
+                }else if(success){
+                    setSuccess(success ?? null);
+                    setError(null);
+                }
+                
             }}>
                 <Fieldset className="space-y-6 rounded-xl bg-white/5 p-6 sm:p-10 flex flex-col items-center">
                     <Legend className="text-2xl font-semibold text-white text-center mb-3">
@@ -60,13 +87,16 @@ export default function RegisterForm() {
                             )}
                         />  
                     </Field>
+                    {error && <StatusMsg msg={error} StatColor="red"/>}
+                    {success && <StatusMsg msg={success} StatColor="green"/>}
                     <Buttons 
                         item='Register with Password'
                     />
                     <div className='border-gray-400 border-2 w-[85%]'></div>
-                    <Button type='submit' className="font-semibold rounded-lg bg-sky-600 py-2 px-4 text-lg text-white data-[hover]:bg-sky-500 data-[active]:bg-sky-700 w-[85%]">
-                        Register with Google
+                    <Button onClick={handleClick} type='submit' className="font-semibold rounded-lg bg-sky-600 py-2 px-4 text-lg text-white data-[hover]:bg-sky-500 data-[active]:bg-sky-700 w-[85%]">
+                        Register with Amazon
                     </Button>
+                    <Link href="/login" className='hover:text-zinc-400 hover:border-zinc-400 border-zinc-300 border-b-2 px-1'>Already User, Please Login from here</Link>
                 </Fieldset>
             </form>
         </div>

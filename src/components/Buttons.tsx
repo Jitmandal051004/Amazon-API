@@ -11,7 +11,7 @@ const Buttons = ({item}:content) => {
     return (
         <Button type='submit' className="font-semibold rounded-lg bg-sky-600 py-2 px-4 text-lg text-white data-[hover]:bg-sky-500 data-[active]:bg-sky-700 w-[85%]">
             {
-                pending ? "Saving in Process..." : item
+                pending ? "In Process..." : item
             }
         </Button>
     )
